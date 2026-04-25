@@ -1,26 +1,112 @@
+/* Global Styles */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-html, body {
-  height: 100%;
-  width: 100%;
-}
-
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f5f5f5;
 }
 
-#root {
-  min-height: 100vh;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
+/* Responsive Images */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Better touch targets for mobile */
+button, 
+a, 
+[role="button"],
+input[type="button"],
+input[type="submit"] {
+  min-height: 44px;
+  cursor: pointer;
+}
+
+/* Prevent zoom on iOS for form elements */
+input, 
+select, 
+textarea {
+  font-size: 16px !important;
+}
+
+/* Mobile Styles (up to 768px) */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 10px !important;
+  }
+  
+  h1 {
+    font-size: 24px !important;
+  }
+  
+  h2 {
+    font-size: 20px !important;
+  }
+  
+  h3 {
+    font-size: 18px !important;
+  }
+  
+  p, span, label {
+    font-size: 14px !important;
+  }
+}
+
+/* Tablet Styles (769px to 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .container {
+    padding: 0 20px !important;
+  }
+}
+
+/* Touch device hover effect removal */
+@media (hover: none) {
+  .hover-scale:hover {
+    transform: none !important;
+  }
+  
+  .hover-lift:hover {
+    transform: none !important;
+  }
+}
+
+/* Loading Spinner */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #e67e22;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+/* Fade In Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Slide Up Animation */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(50px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-out;
 }
