@@ -32,6 +32,19 @@ const HeroCarousel = ({ images, onImageClick }) => {
     return () => clearInterval(interval);
   }, [nextSlide]);
 
+  const handleImageClick = () => {
+    if (onImageClick && images[currentIndex]) {
+      onImageClick(images[currentIndex]);
+    }
+  };
+
+  const handleButtonClick = (e, image) => {
+    e.stopPropagation();
+    if (onImageClick) {
+      onImageClick(image);
+    }
+  };
+
   return (
     <div style={{
       position: 'relative',
@@ -52,7 +65,7 @@ const HeroCarousel = ({ images, onImageClick }) => {
         {images.map((image, index) => (
           <div
             key={index}
-            onClick={() => onImageClick(image)}
+            onClick={() => handleImageClick()}
             style={{
               minWidth: '100%',
               height: '100%',
@@ -85,20 +98,22 @@ const HeroCarousel = ({ images, onImageClick }) => {
             }}>
               <h2 style={{ margin: 0, fontSize: '24px', textShadow: '1px 1px 2px black' }}>{image.title}</h2>
               <p style={{ margin: '5px 0 0', fontSize: '14px', textShadow: '1px 1px 2px black' }}>{image.description}</p>
-              <button style={{
-                marginTop: '12px',
-                padding: '8px 20px',
-                backgroundColor: '#e67e22',
-                color: 'white',
-                border: 'none',
-                borderRadius: '30px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: 'bold',
-                transition: 'all 0.3s ease'
-              }}
-              onMouseEnter={(e) => e.target.style.backgroundColor = '#d35400'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = '#e67e22'}
+              <button 
+                onClick={(e) => handleButtonClick(e, image)}
+                style={{
+                  marginTop: '12px',
+                  padding: '8px 20px',
+                  backgroundColor: '#e67e22',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '30px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  transition: 'all 0.3s ease'
+                }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#d35400'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = '#e67e22'}
               >
                 Book Now →
               </button>

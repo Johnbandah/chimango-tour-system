@@ -1228,6 +1228,21 @@ app.get('/api/custom-bookings/code/:bookingCode', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+// Get booking by booking code
+app.get('/api/custom-bookings/code/:bookingCode', async (req, res) => {
+  try {
+    const booking = await CustomBooking.findOne({ bookingCode: req.params.bookingCode })
+      .populate('selectedActivities.activity');
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+    res.json(booking);
+  } catch (error) {
+    console.error('Error fetching booking by code:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 // ==================== DATABASE CONNECTION ====================
 
 mongoose.connect(process.env.MONGO_URI)

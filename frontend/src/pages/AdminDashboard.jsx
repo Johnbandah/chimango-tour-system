@@ -13,6 +13,12 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('activities');
   const [showAddTour, setShowAddTour] = useState(false);
   const [showAddActivity, setShowAddActivity] = useState(false);
+  
+  // Delete confirmation modal state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [deleteType, setDeleteType] = useState(''); // 'activity' or 'tour'
+  
   const [newTour, setNewTour] = useState({
     name: '',
     destination: '',
@@ -148,27 +154,34 @@ const AdminDashboard = () => {
     }
   };
 
-  const deleteTour = async (tourId) => {
-    if (!confirm('Are you sure you want to delete this tour?')) return;
-    try {
-      await axios.delete(`${API_URL}/api/tours/${tourId}`);
-      fetchTours();
-      alert('Tour deleted');
-    } catch (error) {
-      console.error('Error deleting tour:', error);
-      alert('Failed to delete tour');
-    }
+  // Show delete confirmation modal
+  const confirmDelete = (item, type) => {
+    setItemToDelete(item);
+    setDeleteType(type);
+    setShowDeleteConfirm(true);
   };
 
-  const deleteActivity = async (activityId) => {
-    if (!confirm('Are you sure you want to delete this activity?')) return;
+  // Handle actual deletion after confirmation
+  const handleDeleteConfirm = async () => {
+    if (!itemToDelete) return;
+    
     try {
-      await axios.delete(`${API_URL}/api/activities/${activityId}`);
-      fetchActivities();
-      alert('Activity deleted');
+      if (deleteType === 'activity') {
+        await axios.delete(`${API_URL}/api/activities/${itemToDelete._id}`);
+        fetchActivities();
+        alert(`✅ "${itemToDelete.name}" has been deleted successfully.`);
+      } else if (deleteType === 'tour') {
+        await axios.delete(`${API_URL}/api/tours/${itemToDelete._id}`);
+        fetchTours();
+        alert(`✅ "${itemToDelete.name}" has been deleted successfully.`);
+      }
     } catch (error) {
-      console.error('Error deleting activity:', error);
-      alert('Failed to delete activity');
+      console.error('Delete error:', error);
+      alert(`❌ Failed to delete. Please try again.`);
+    } finally {
+      setShowDeleteConfirm(false);
+      setItemToDelete(null);
+      setDeleteType('');
     }
   };
 
@@ -268,8 +281,10 @@ const AdminDashboard = () => {
                   <td style={{ padding: '0.5rem' }}>{activity.location}</td>
                   <td style={{ padding: '0.5rem' }}>USD {activity.pricePerDay?.toLocaleString() || 0}</td>
                   <td style={{ padding: '0.5rem' }}>{activity.category}</td>
-                  <td style={{ padding: '0.5rem' }}><button onClick={() => deleteActivity(activity._id)} style={{ backgroundColor: '#e74c3c', color: 'white', border: 'none', padding: '0.25rem 0.5rem', borderRadius: '4px', cursor: 'pointer' }}>Delete</button></td>
-                </tr>
+                  <td style={{ padding: '0.5rem' }}>
+                    <button onClick={() => confirmDelete(activity, 'activity')} style={{ backgroundColor: '#e74c3c', color: 'white', border: 'none', padding: '0.25rem 0.5rem', borderRadius: '4px', cursor: 'pointer' }}>Delete</button>
+                  </td>
+                 </tr>
               ))}
             </tbody>
           </table>
@@ -306,7 +321,7 @@ const AdminDashboard = () => {
                 <th style={{ padding: '0.5rem', textAlign: 'left' }}>Price (USD)</th>
                 <th style={{ padding: '0.5rem', textAlign: 'left' }}>Status</th>
                 <th style={{ padding: '0.5rem', textAlign: 'left' }}>Actions</th>
-              </tr>
+               </tr>
             </thead>
             <tbody>
               {tours.map((tour) => (
@@ -315,8 +330,10 @@ const AdminDashboard = () => {
                   <td style={{ padding: '0.5rem' }}>{tour.destination}</td>
                   <td style={{ padding: '0.5rem' }}>USD {tour.price?.toLocaleString() || 0}</td>
                   <td style={{ padding: '0.5rem' }}>{tour.status}</td>
-                  <td style={{ padding: '0.5rem' }}><button onClick={() => deleteTour(tour._id)} style={{ backgroundColor: '#e74c3c', color: 'white', border: 'none', padding: '0.25rem 0.5rem', borderRadius: '4px', cursor: 'pointer' }}>Delete</button></td>
-                </tr>
+                  <td style={{ padding: '0.5rem' }}>
+                    <button onClick={() => confirmDelete(tour, 'tour')} style={{ backgroundColor: '#e74c3c', color: 'white', border: 'none', padding: '0.25rem 0.5rem', borderRadius: '4px', cursor: 'pointer' }}>Delete</button>
+                  </td>
+                 </tr>
               ))}
             </tbody>
           </table>
@@ -340,7 +357,7 @@ const AdminDashboard = () => {
                     <th style={{ padding: '0.5rem', textAlign: 'left' }}>Total (USD)</th>
                     <th style={{ padding: '0.5rem', textAlign: 'left' }}>Status</th>
                     <th style={{ padding: '0.5rem', textAlign: 'left' }}>Action</th>
-                  </tr>
+                   </tr>
                 </thead>
                 <tbody>
                   {bookings.map((booking) => (
@@ -360,7 +377,7 @@ const AdminDashboard = () => {
                         )}
                         {booking.status === 'confirmed' && <span style={{ color: 'green', fontSize: '12px' }}>Confirmed</span>}
                       </td>
-                    </tr>
+                     </tr>
                   ))}
                 </tbody>
               </table>
@@ -384,7 +401,7 @@ const AdminDashboard = () => {
                     <th style={{ padding: '0.5rem', textAlign: 'left' }}>Phone Number</th>
                     <th style={{ padding: '0.5rem', textAlign: 'left' }}>Role</th>
                     <th style={{ padding: '0.5rem', textAlign: 'left' }}>Registered On</th>
-                  </tr>
+                   </tr>
                 </thead>
                 <tbody>
                   {users.map((user) => (
@@ -394,7 +411,7 @@ const AdminDashboard = () => {
                       <td style={{ padding: '0.5rem' }}>{user.phone ? <a href={`tel:${user.phone}`} style={{ color: '#3498db', textDecoration: 'none' }}>📞 {user.phone}</a> : 'Not provided'}</td>
                       <td style={{ padding: '0.5rem' }}><span style={{ padding: '2px 8px', borderRadius: '12px', fontSize: '12px', backgroundColor: user.role === 'admin' ? '#cce5ff' : '#d4edda', color: user.role === 'admin' ? '#004085' : '#155724' }}>{user.role}</span></td>
                       <td style={{ padding: '0.5rem' }}>{new Date(user.createdAt).toLocaleDateString()}</td>
-                    </tr>
+                     </tr>
                   ))}
                 </tbody>
               </table>
@@ -420,7 +437,7 @@ const AdminDashboard = () => {
                     <th style={{ padding: '0.5rem', textAlign: 'left' }}>Amount</th>
                     <th style={{ padding: '0.5rem', textAlign: 'left' }}>Reference</th>
                     <th style={{ padding: '0.5rem', textAlign: 'left' }}>Action</th>
-                  </tr>
+                   </tr>
                 </thead>
                 <tbody>
                   {paymentRequests.map((payment) => (
@@ -434,12 +451,71 @@ const AdminDashboard = () => {
                       <td style={{ padding: '0.5rem' }}>
                         <button onClick={() => verifyPayment(payment._id, payment.bookingCode, payment.customerPhone, payment.customerName)} style={{ backgroundColor: '#2ecc71', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>Verify &amp; Confirm</button>
                       </td>
-                    </tr>
+                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && itemToDelete && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 2000
+        }} onClick={() => setShowDeleteConfirm(false)}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '16px',
+            maxWidth: '450px',
+            width: '90%',
+            padding: '30px',
+            textAlign: 'center'
+          }} onClick={(e) => e.stopPropagation()}>
+            <div style={{
+              width: '70px',
+              height: '70px',
+              backgroundColor: '#e74c3c',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 20px'
+            }}>
+              <span style={{ fontSize: '40px' }}>⚠️</span>
+            </div>
+            <h2 style={{ color: '#2c3e50', marginBottom: '10px' }}>Delete {deleteType === 'activity' ? 'Activity' : 'Tour'}?</h2>
+            <p style={{ color: '#666', marginBottom: '10px' }}>
+              Are you sure you want to delete <strong>"{itemToDelete.name}"</strong>?
+            </p>
+            <p style={{ color: '#e74c3c', fontSize: '14px', marginBottom: '20px' }}>
+              This action cannot be undone!
+            </p>
+            <div style={{ display: 'flex', gap: '15px' }}>
+              <button 
+                onClick={() => setShowDeleteConfirm(false)}
+                style={{ flex: 1, padding: '12px', backgroundColor: '#95a5a6', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '16px' }}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleDeleteConfirm}
+                style={{ flex: 1, padding: '12px', backgroundColor: '#e74c3c', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', fontWeight: 'bold' }}
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

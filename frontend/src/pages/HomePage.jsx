@@ -29,7 +29,7 @@ const HomePage = () => {
       url: '/images/kayaking.jpg',
       title: 'Kayaking on Lake Malawi',
       description: 'Experience the crystal clear waters',
-      activityName: 'Lake Malawi Kayaking Adventure'
+      activityName: 'Kayaking on Lake Malawi'
     },
     {
       url: '/images/safari.jpg',
@@ -71,14 +71,22 @@ const HomePage = () => {
   };
 
   const handleCarouselClick = async (carouselImage) => {
+    console.log("Carousel clicked:", carouselImage.activityName);
+    
     try {
       const res = await axios.get(`${API_URL}/api/activities`);
-      const matchedActivity = res.data.find(
-        activity => activity.name === carouselImage.activityName
+      const allActivities = res.data;
+      
+      // Case-insensitive matching
+      const matchedActivity = allActivities.find(
+        activity => activity.name.toLowerCase().trim() === carouselImage.activityName.toLowerCase().trim()
       );
+      
       if (matchedActivity) {
+        console.log("Matched activity:", matchedActivity.name);
         navigate(`/activities?book=${matchedActivity._id}`);
       } else {
+        console.log("No match found, going to activities page");
         navigate('/activities');
       }
     } catch (error) {

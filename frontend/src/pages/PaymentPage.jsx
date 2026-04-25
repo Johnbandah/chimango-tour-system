@@ -24,8 +24,6 @@ const PaymentPage = () => {
     tnm: '0884183092'
   };
 
-  const ADMIN_WHATSAPP = '0985489510';
-
   useEffect(() => {
     const storedData = sessionStorage.getItem('pendingPayment');
     
@@ -36,9 +34,38 @@ const PaymentPage = () => {
       setBookingData(location.state.bookingData);
       setLoading(false);
     } else {
-      setLoading(false);
+      const params = new URLSearchParams(location.search);
+      const bookingCode = params.get('bookingCode');
+      if (bookingCode) {
+        fetchBookingData(bookingCode);
+      } else {
+        setLoading(false);
+      }
     }
   }, [location]);
+
+  const fetchBookingData = async (bookingCode) => {
+    try {
+      const response = await axios.get(`${API_URL}/api/custom-bookings/code/${bookingCode}`);
+      if (response.data) {
+        const booking = response.data;
+        const paymentData = {
+          bookingCode: booking.bookingCode,
+          totalPrice: booking.totalPrice,
+          personalDetails: booking.personalDetails,
+          activityName: booking.selectedActivities?.[0]?.activity?.name || 'Activity',
+          selectedDate: booking.selectedActivities?.[0]?.selectedDate,
+          booking: booking
+        };
+        setBookingData(paymentData);
+        sessionStorage.setItem('pendingPayment', JSON.stringify(paymentData));
+      }
+    } catch (error) {
+      console.error('Error fetching booking:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!paymentMethod) {
@@ -55,17 +82,13 @@ const PaymentPage = () => {
 
     try {
       let methodName = '';
-      let paymentNumber = '';
       
       if (paymentMethod === 'bank') {
         methodName = 'National Bank Transfer';
-        paymentNumber = bankDetails.accountNumber;
       } else if (paymentMethod === 'airtel') {
         methodName = 'Airtel Money';
-        paymentNumber = mobileMoneyNumbers.airtel;
       } else {
         methodName = 'TNM Mpamba';
-        paymentNumber = mobileMoneyNumbers.tnm;
       }
 
       const paymentData = {
@@ -82,26 +105,9 @@ const PaymentPage = () => {
       };
 
       await axios.post(`${API_URL}/api/payment-request`, paymentData);
-
-      const message = 
-        `🔔 NEW PAYMENT REQUEST - CHIMANGO TOUR 🔔\n\n` +
-        `Booking Code: ${bookingData.bookingCode}\n` +
-        `Customer Name: ${bookingData.personalDetails?.fullName || 'N/A'}\n` +
-        `Customer Phone: ${bookingData.personalDetails?.phone || 'N/A'}\n` +
-        `Activity: ${bookingData.activityName}\n` +
-        `Amount: USD ${bookingData.totalPrice}\n` +
-        `Payment Method: ${methodName}\n` +
-        `Payment To: ${paymentNumber}\n` +
-        `Reference Number: ${paymentReference}\n\n` +
-        `Please verify this payment and confirm the booking.`;
-
-      const encodedMessage = encodeURIComponent(message);
-      const whatsappUrl = `https://wa.me/${ADMIN_WHATSAPP}?text=${encodedMessage}`;
       
-      window.open(whatsappUrl, '_blank');
-      await navigator.clipboard.writeText(message);
-      
-      alert(`✅ Payment request submitted!\n\nBooking Code: ${bookingData.bookingCode}\nReference: ${paymentReference}\n\nWhatsApp will open. Please send the message.`);
+      // Updated message - pending admin approval, not confirmed
+      alert(`✅ Payment request submitted successfully!\n\nBooking Code: ${bookingData.bookingCode}\nReference: ${paymentReference}\n\nYour booking is pending admin approval. You will receive confirmation once your payment is verified.`);
       
       sessionStorage.removeItem('pendingPayment');
       
@@ -120,7 +126,22 @@ const PaymentPage = () => {
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '50px' }}>
+        <div style={{ 
+          width: '50px', 
+          height: '50px', 
+          border: '5px solid #f3f3f3', 
+          borderTop: '5px solid #e67e22', 
+          borderRadius: '50%', 
+          animation: 'spin 1s linear infinite',
+          margin: '0 auto 20px'
+        }} />
         <h2>Loading payment details...</h2>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     );
   }
@@ -267,9 +288,9 @@ const PaymentPage = () => {
             <li>Make payment using your selected method above</li>
             <li>Enter the transaction reference number</li>
             <li>Click "Submit Payment"</li>
-            <li>WhatsApp will open with pre-filled message to Admin</li>
-            <li>Send the message to verify your payment</li>
-            <li>Admin will verify and confirm your booking</li>
+            <li>Your booking will be pending admin approval</li>
+            <li>Admin will verify your payment and confirm your booking</li>
+            <li>You can check status in "My Bookings" page</li>
           </ol>
         </div>
 

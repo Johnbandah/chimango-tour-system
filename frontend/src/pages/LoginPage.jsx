@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';  // Add useLocation
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { API_URL } from '../config';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -11,15 +10,7 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();  // ADD THIS
-
-  // Get the redirect path from location state, or default to '/'
-  const from = location.state?.from?.pathname || '/';
-  // Also check for booking parameter in URL
-  const params = new URLSearchParams(location.search);
-  const bookingActivityId = params.get('book');
-  // Build redirect path with booking parameter if exists
-  const redirectPath = bookingActivityId ? `/activities?book=${bookingActivityId}` : from;
+  const location = useLocation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,8 +19,23 @@ const LoginPage = () => {
     
     try {
       await login(email, password);
-      // Redirect to the intended destination (with booking parameter if exists)
-      navigate(redirectPath, { replace: true });
+      
+      // Check if there's a pending booking from sessionStorage
+      const pendingBooking = sessionStorage.getItem('pendingBooking');
+      if (pendingBooking) {
+        sessionStorage.removeItem('pendingBooking');
+        // Redirect to activities page where the booking modal will open
+        navigate('/activities');
+      } else {
+        // Check if there's a redirect parameter in URL
+        const params = new URLSearchParams(location.search);
+        const redirect = params.get('redirect');
+        if (redirect === 'booking') {
+          navigate('/activities');
+        } else {
+          navigate('/');
+        }
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');
     } finally {
