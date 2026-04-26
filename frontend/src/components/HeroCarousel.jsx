@@ -3,8 +3,6 @@ import { useState, useEffect, useCallback } from 'react';
 const HeroCarousel = ({ images, onImageClick }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [touchStart, setTouchStart] = useState(0);
-  const [touchEnd, setTouchEnd] = useState(0);
 
   const nextSlide = useCallback(() => {
     if (isAnimating) return;
@@ -25,26 +23,6 @@ const HeroCarousel = ({ images, onImageClick }) => {
     setIsAnimating(true);
     setCurrentIndex(index);
     setTimeout(() => setIsAnimating(false), 500);
-  };
-
-  // Touch handlers for mobile swipe
-  const handleTouchStart = (e) => {
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchMove = (e) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (touchStart - touchEnd > 50) {
-      // Swipe left
-      nextSlide();
-    }
-    if (touchStart - touchEnd < -50) {
-      // Swipe right
-      prevSlide();
-    }
   };
 
   useEffect(() => {
@@ -68,20 +46,13 @@ const HeroCarousel = ({ images, onImageClick }) => {
   };
 
   return (
-    <div 
-      className="hero-carousel"
-      style={{
-        position: 'relative',
-        width: '100%',
-        height: 'clamp(300px, 50vw, 500px)',
-        overflow: 'hidden',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-        backgroundColor: '#1a1a2e'
-      }}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-    >
+    <div style={{
+      position: 'relative',
+      width: '100%',
+      height: 'clamp(200px, 35vw, 350px)',  // Smaller height
+      backgroundColor: '#1a1a2e',
+      overflow: 'hidden'
+    }}>
       <div style={{
         display: 'flex',
         transition: 'transform 0.5s ease-in-out',
@@ -108,7 +79,7 @@ const HeroCarousel = ({ images, onImageClick }) => {
                 width: '100%',
                 height: '100%',
                 objectFit: 'cover',
-                objectPosition: 'center'
+                objectPosition: 'center 30%'  // Focus on upper part of image
               }}
             />
             <div style={{
@@ -116,41 +87,40 @@ const HeroCarousel = ({ images, onImageClick }) => {
               bottom: 0,
               left: 0,
               right: 0,
-              background: 'linear-gradient(transparent, rgba(0,0,0,0.8))',
+              background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
               color: 'white',
-              padding: 'clamp(15px, 5vw, 30px) clamp(15px, 4vw, 20px)',
+              padding: 'clamp(10px, 3vw, 20px) clamp(15px, 4vw, 25px)',
               textAlign: 'center'
             }}>
-              <h2 className="hero-carousel-title" style={{ 
+              <h2 style={{ 
                 margin: 0, 
-                fontSize: 'clamp(18px, 5vw, 24px)',
+                fontSize: 'clamp(14px, 4vw, 22px)',
                 textShadow: '1px 1px 2px black'
               }}>
                 {image.title}
               </h2>
-              <p className="hero-carousel-description" style={{ 
-                margin: '5px 0 0', 
-                fontSize: 'clamp(12px, 3vw, 14px)',
+              <p style={{ 
+                margin: '3px 0 0', 
+                fontSize: 'clamp(10px, 3vw, 14px)',
                 textShadow: '1px 1px 2px black',
                 display: 'block'
               }}>
                 {image.description}
               </p>
               <button 
-                className="hero-carousel-button"
                 onClick={(e) => handleButtonClick(e, image)}
                 style={{
-                  marginTop: 'clamp(8px, 3vw, 12px)',
-                  padding: 'clamp(6px, 2vw, 8px) clamp(16px, 4vw, 20px)',
+                  marginTop: 'clamp(5px, 2vw, 10px)',
+                  padding: 'clamp(4px, 1.5vw, 8px) clamp(12px, 3vw, 20px)',
                   backgroundColor: '#e67e22',
                   color: 'white',
                   border: 'none',
                   borderRadius: '30px',
                   cursor: 'pointer',
-                  fontSize: 'clamp(12px, 3vw, 14px)',
+                  fontSize: 'clamp(10px, 2.5vw, 13px)',
                   fontWeight: 'bold',
                   transition: 'all 0.3s ease',
-                  minHeight: '36px'
+                  minHeight: '32px'
                 }}
                 onMouseEnter={(e) => e.target.style.backgroundColor = '#d35400'}
                 onMouseLeave={(e) => e.target.style.backgroundColor = '#e67e22'}
@@ -162,65 +132,71 @@ const HeroCarousel = ({ images, onImageClick }) => {
         ))}
       </div>
 
+      {/* Navigation Arrows */}
       <button
-        className="hero-carousel-nav"
         onClick={prevSlide}
         style={{
           position: 'absolute',
-          left: 'clamp(10px, 3vw, 16px)',
+          left: '8px',
           top: '50%',
           transform: 'translateY(-50%)',
-          backgroundColor: 'rgba(0,0,0,0.5)',
+          backgroundColor: 'rgba(0,0,0,0.4)',
           color: 'white',
           border: 'none',
           borderRadius: '50%',
-          width: 'clamp(32px, 6vw, 40px)',
-          height: 'clamp(32px, 6vw, 40px)',
-          fontSize: 'clamp(16px, 4vw, 20px)',
+          width: 'clamp(25px, 4vw, 32px)',
+          height: 'clamp(25px, 4vw, 32px)',
+          fontSize: 'clamp(14px, 3vw, 18px)',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 10,
-          transition: 'all 0.3s ease'
+          transition: 'all 0.3s ease',
+          opacity: 0.6
         }}
+        onMouseEnter={(e) => e.currentTarget.style.opacity = 1}
+        onMouseLeave={(e) => e.currentTarget.style.opacity = 0.6}
       >
         ❮
       </button>
 
       <button
-        className="hero-carousel-nav"
         onClick={nextSlide}
         style={{
           position: 'absolute',
-          right: 'clamp(10px, 3vw, 16px)',
+          right: '8px',
           top: '50%',
           transform: 'translateY(-50%)',
-          backgroundColor: 'rgba(0,0,0,0.5)',
+          backgroundColor: 'rgba(0,0,0,0.4)',
           color: 'white',
           border: 'none',
           borderRadius: '50%',
-          width: 'clamp(32px, 6vw, 40px)',
-          height: 'clamp(32px, 6vw, 40px)',
-          fontSize: 'clamp(16px, 4vw, 20px)',
+          width: 'clamp(25px, 4vw, 32px)',
+          height: 'clamp(25px, 4vw, 32px)',
+          fontSize: 'clamp(14px, 3vw, 18px)',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 10,
-          transition: 'all 0.3s ease'
+          transition: 'all 0.3s ease',
+          opacity: 0.6
         }}
+        onMouseEnter={(e) => e.currentTarget.style.opacity = 1}
+        onMouseLeave={(e) => e.currentTarget.style.opacity = 0.6}
       >
         ❯
       </button>
 
+      {/* Dots Indicator */}
       <div style={{
         position: 'absolute',
-        bottom: 'clamp(10px, 2vw, 15px)',
+        bottom: 'clamp(8px, 2vw, 12px)',
         left: '50%',
         transform: 'translateX(-50%)',
         display: 'flex',
-        gap: 'clamp(8px, 2vw, 10px)',
+        gap: 'clamp(5px, 2vw, 8px)',
         zIndex: 10
       }}>
         {images.map((_, index) => (
@@ -228,14 +204,15 @@ const HeroCarousel = ({ images, onImageClick }) => {
             key={index}
             onClick={() => goToSlide(index)}
             style={{
-              width: 'clamp(8px, 2vw, 10px)',
-              height: 'clamp(8px, 2vw, 10px)',
+              width: 'clamp(6px, 2vw, 8px)',
+              height: 'clamp(6px, 2vw, 8px)',
               borderRadius: '50%',
-              backgroundColor: currentIndex === index ? '#e67e22' : 'rgba(255,255,255,0.6)',
+              backgroundColor: currentIndex === index ? '#e67e22' : 'rgba(255,255,255,0.5)',
               border: 'none',
               cursor: 'pointer',
               padding: 0,
-              minHeight: 'auto'
+              minHeight: 'auto',
+              transition: 'all 0.3s ease'
             }}
           />
         ))}

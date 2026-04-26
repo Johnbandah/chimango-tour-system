@@ -10,6 +10,7 @@ const fs = require('fs');
 const crypto = require('crypto');
 const http = require('http');
 const socketIo = require('socket.io');
+const axios = require('axios');
 require('dotenv').config();
 
 // Import models
@@ -1241,6 +1242,142 @@ app.get('/api/custom-bookings/code/:bookingCode', async (req, res) => {
   } catch (error) {
     console.error('Error fetching booking by code:', error);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ==================== PAYCHANGU INTEGRATION ====================
+
+// Create order and redirect to PayChangu
+app.post('/api/paychangu/create-order', async (req, res) => {
+  try {
+    const { amount, bookingCode, customerName, customerEmail, customerPhone } = req.body;
+    
+    console.log('Creating PayChangu order:', { amount, bookingCode, customerName, customerEmail });
+    
+    // Convert USD to MWK (use current exchange rate)
+    const amountMWK = Math.round(amount * 1800); // 1 USD = 1800 MWK (adjust as needed)
+    
+    const paychanguUrl = 'https://paychangu.com/api/create-order';
+    
+    const payload = {
+      public_key: process.env.PAYCHANGU_PUBLIC_KEY,
+      secret_key: process.env.PAYCHANGU_SECRET_KEY,
+      amount: amountMWK,
+      currency: 'MWK',
+      reference: bookingCode,
+      customer_name: customerName,
+      customer_email: customerEmail,
+      customer_phone: customerPhone || 'N/A',
+      return_url: `${process.env.FRONTEND_URL}/booking-confirmation?bookingCode=${bookingCode}`,
+      webhook_url: `${process.env.BACKEND_URL}/api/paychangu/webhook`,
+    };
+    
+    const response = await axios.post(paychanguUrl, payload);
+    
+    console.log('PayChangu response:', response.data);
+    
+    if (response.data && response.data.checkout_url) {
+      res.json({
+        success: true,
+        checkout_url: response.data.checkout_url,
+        reference: bookingCode
+      });
+    } else {
+      res.status(400).json({ success: false, message: 'Failed to create order', error: response.data });
+    }
+  } catch (error) {
+    console.error('PayChangu error:', error.response?.data || error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// ==================== PAYCHANGU INTEGRATION ====================
+
+// Create order and redirect to PayChangu
+app.post('/api/paychangu/create-order', async (req, res) => {
+  try {
+    const { amount, bookingCode, customerName, customerEmail, customerPhone } = req.body;
+    
+    console.log('Creating PayChangu order:', { amount, bookingCode, customerName, customerEmail });
+    
+    // Convert USD to MWK
+    const amountMWK = Math.round(amount * 1800);
+    
+    // Get the base URL
+    const baseUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    
+    // Prepare payload (NO secret_key in body)
+    const payload = {
+      amount: amountMWK,
+      currency: "MWK",
+      email: customerEmail,
+      first_name: customerName?.split(' ')[0] || 'Customer',
+      last_name: customerName?.split(' ')[1] || '',
+      tx_ref: `${bookingCode}_${Date.now()}`,
+      return_url: `${frontendUrl}/booking-confirmation?bookingCode=${bookingCode}`,
+      callback_url: `${baseUrl}/api/paychangu/webhook`,
+      customization: {
+        title: "Chimango Tour Booking",
+        description: `Booking for ${bookingCode}`,
+      }
+    };
+    
+    console.log('Payload:', JSON.stringify(payload, null, 2));
+    
+    // Call PayChangu API with Authorization header
+    const response = await axios.post(
+      'https://api.paychangu.com/payment',
+      payload,
+      {
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${process.env.PAYCHANGU_SECRET_KEY}`,
+          'Content-Type': 'application/json',
+        }
+      }
+    );
+    
+    console.log('PayChangu Response:', response.data);
+    
+    if (response.data && response.data.status === 'success') {
+      const checkoutUrl = response.data.data?.checkout_url;
+      
+      if (checkoutUrl) {
+        // Save payment request
+        await PaymentRequest.create({
+          bookingCode: bookingCode,
+          paymentMethod: 'PayChangu',
+          paymentReference: response.data.data?.tx_ref || payload.tx_ref,
+          amount: amount,
+          customerName: customerName,
+          customerPhone: customerPhone,
+          status: 'pending'
+        });
+        
+        res.json({
+          success: true,
+          checkout_url: checkoutUrl,
+          reference: bookingCode
+        });
+      } else {
+        res.status(400).json({ 
+          success: false, 
+          message: 'No checkout URL received'
+        });
+      }
+    } else {
+      res.status(400).json({ 
+        success: false, 
+        message: response.data?.message || 'Payment initiation failed'
+      });
+    }
+  } catch (error) {
+    console.error('PayChangu error:', error.response?.data || error.message);
+    res.status(500).json({ 
+      success: false, 
+      message: error.response?.data?.message || error.message
+    });
   }
 });
 // ==================== DATABASE CONNECTION ====================

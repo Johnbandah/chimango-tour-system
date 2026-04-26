@@ -106,7 +106,6 @@ const PaymentPage = () => {
 
       await axios.post(`${API_URL}/api/payment-request`, paymentData);
       
-      // Updated message - pending admin approval, not confirmed
       alert(`✅ Payment request submitted successfully!\n\nBooking Code: ${bookingData.bookingCode}\nReference: ${paymentReference}\n\nYour booking is pending admin approval. You will receive confirmation once your payment is verified.`);
       
       sessionStorage.removeItem('pendingPayment');
@@ -121,6 +120,21 @@ const PaymentPage = () => {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  // PayChangu Payment Handler
+  const handlePayChanguPayment = () => {
+    // Convert USD to MWK (1 USD = 1800 MWK)
+    const amountMWK = Math.round(bookingData.totalPrice * 1800);
+    
+    // Your PayChangu payment link
+    const paymentLink = "https://pay.paychangu.com/SC-CWC5T0";
+    
+    // Create the full URL with amount parameter
+    const paymentUrl = `${paymentLink}?amount=${amountMWK}&description=Chimango%20Tour%20Booking%20${bookingData.bookingCode}`;
+    
+    // Open PayChangu payment page
+    window.location.href = paymentUrl;
   };
 
   if (loading) {
@@ -191,6 +205,45 @@ const PaymentPage = () => {
 
         <h3 style={{ fontSize: '16px', marginBottom: '15px' }}>Select Payment Method:</h3>
 
+        {/* PayChangu Option */}
+        <div 
+          onClick={() => setPaymentMethod('paychangu')}
+          style={{
+            border: paymentMethod === 'paychangu' ? '2px solid #e67e22' : '1px solid #ddd',
+            borderRadius: '8px',
+            padding: '15px',
+            marginBottom: '15px',
+            cursor: 'pointer',
+            backgroundColor: paymentMethod === 'paychangu' ? '#fff8f0' : 'white'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <input type="radio" checked={paymentMethod === 'paychangu'} readOnly />
+            <span style={{ fontWeight: 'bold' }}>💳 PayChangu (Card/Mobile Money)</span>
+          </div>
+          {paymentMethod === 'paychangu' && (
+            <div style={{ marginTop: '15px' }}>
+              <button
+                onClick={handlePayChanguPayment}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  backgroundColor: '#e67e22',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  fontWeight: 'bold'
+                }}
+              >
+                Pay with PayChangu
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Airtel Money */}
         <div 
           onClick={() => setPaymentMethod('airtel')}
           style={{
@@ -215,6 +268,7 @@ const PaymentPage = () => {
           )}
         </div>
 
+        {/* TNM Mpamba */}
         <div 
           onClick={() => setPaymentMethod('tnm')}
           style={{
@@ -239,6 +293,7 @@ const PaymentPage = () => {
           )}
         </div>
 
+        {/* National Bank */}
         <div 
           onClick={() => setPaymentMethod('bank')}
           style={{
@@ -266,7 +321,7 @@ const PaymentPage = () => {
           )}
         </div>
 
-        {paymentMethod && (
+        {paymentMethod && paymentMethod !== 'paychangu' && (
           <div style={{ marginBottom: '20px' }}>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Payment Reference / Transaction ID:</label>
             <input
@@ -286,46 +341,47 @@ const PaymentPage = () => {
           <h4 style={{ margin: '0 0 8px 0', color: '#155724' }}>Instructions:</h4>
           <ol style={{ margin: '0', paddingLeft: '20px', color: '#155724', fontSize: '13px' }}>
             <li>Make payment using your selected method above</li>
-            <li>Enter the transaction reference number</li>
-            <li>Click "Submit Payment"</li>
-            <li>Your booking will be pending admin approval</li>
-            <li>Admin will verify your payment and confirm your booking</li>
-            <li>You can check status in "My Bookings" page</li>
+            <li>For PayChangu, you will be redirected to complete payment</li>
+            <li>For other methods, enter the transaction reference number</li>
+            <li>Click "Submit Payment" (or "Pay with PayChangu")</li>
+            <li>Your booking will be confirmed after payment verification</li>
           </ol>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button 
-            onClick={() => navigate('/activities')}
-            style={{ 
-              flex: 1, 
-              padding: '12px', 
-              backgroundColor: '#95a5a6', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '8px', 
-              cursor: 'pointer' 
-            }}
-          >
-            Cancel
-          </button>
-          <button 
-            onClick={handleSubmit} 
-            disabled={submitting || !paymentMethod || !paymentReference}
-            style={{ 
-              flex: 1, 
-              padding: '12px', 
-              backgroundColor: '#e67e22', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '8px', 
-              cursor: (!paymentMethod || !paymentReference || submitting) ? 'not-allowed' : 'pointer',
-              opacity: (!paymentMethod || !paymentReference || submitting) ? 0.6 : 1
-            }}
-          >
-            {submitting ? 'Processing...' : 'Submit Payment'}
-          </button>
-        </div>
+        {paymentMethod && paymentMethod !== 'paychangu' && (
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button 
+              onClick={() => navigate('/activities')}
+              style={{ 
+                flex: 1, 
+                padding: '12px', 
+                backgroundColor: '#95a5a6', 
+                color: 'white', 
+                border: 'none', 
+                borderRadius: '8px', 
+                cursor: 'pointer' 
+              }}
+            >
+              Cancel
+            </button>
+            <button 
+              onClick={handleSubmit} 
+              disabled={submitting || !paymentMethod || !paymentReference}
+              style={{ 
+                flex: 1, 
+                padding: '12px', 
+                backgroundColor: '#e67e22', 
+                color: 'white', 
+                border: 'none', 
+                borderRadius: '8px', 
+                cursor: (!paymentMethod || !paymentReference || submitting) ? 'not-allowed' : 'pointer',
+                opacity: (!paymentMethod || !paymentReference || submitting) ? 0.6 : 1
+              }}
+            >
+              {submitting ? 'Processing...' : 'Submit Payment'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
