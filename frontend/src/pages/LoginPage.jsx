@@ -1,45 +1,81 @@
 import { useState } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const LoginPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  // Login state
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
+  
+  // Register state
+  const [registerFullName, setRegisterFullName] = useState('');
+  const [registerEmail, setRegisterEmail] = useState('');
+  const [registerPassword, setRegisterPassword] = useState('');
+  const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
+  const [registerPhone, setRegisterPhone] = useState('');
+  const [registerError, setRegisterError] = useState('');
+  const [registerLoading, setRegisterLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { login } = useAuth();
+  
+  const { login, register } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
-  const handleSubmit = async (e) => {
+  // Handle Login
+  const handleLogin = async (e) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
+    setLoginError('');
+    setLoginLoading(true);
     
     try {
-      await login(email, password);
+      await login(loginEmail, loginPassword);
       
-      // Check if there's a pending booking from sessionStorage
       const pendingBooking = sessionStorage.getItem('pendingBooking');
       if (pendingBooking) {
         sessionStorage.removeItem('pendingBooking');
-        // Redirect to activities page where the booking modal will open
         navigate('/activities');
       } else {
-        // Check if there's a redirect parameter in URL
-        const params = new URLSearchParams(location.search);
-        const redirect = params.get('redirect');
-        if (redirect === 'booking') {
-          navigate('/activities');
-        } else {
-          navigate('/');
-        }
+        navigate('/');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      setLoginError(err.response?.data?.message || 'Login failed');
     } finally {
-      setLoading(false);
+      setLoginLoading(false);
+    }
+  };
+
+  // Handle Register
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setRegisterError('');
+    
+    if (registerPassword !== registerConfirmPassword) {
+      setRegisterError('Passwords do not match');
+      return;
+    }
+    
+    if (registerPassword.length < 6) {
+      setRegisterError('Password must be at least 6 characters');
+      return;
+    }
+    
+    setRegisterLoading(true);
+    
+    try {
+      await register(registerFullName, registerEmail, registerPassword, registerPhone);
+      
+      const pendingBooking = sessionStorage.getItem('pendingBooking');
+      if (pendingBooking) {
+        sessionStorage.removeItem('pendingBooking');
+        navigate('/activities');
+      } else {
+        navigate('/');
+      }
+    } catch (err) {
+      setRegisterError(err.response?.data?.message || 'Registration failed');
+    } finally {
+      setRegisterLoading(false);
     }
   };
 
@@ -48,68 +84,321 @@ const LoginPage = () => {
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '4rem auto', padding: '2rem', border: '1px solid #ddd', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', backgroundColor: 'white' }}>
-      <h2 style={{ textAlign: 'center', color: '#2c3e50' }}>Login</h2>
-      {error && <div style={{ color: 'red', marginBottom: '1rem', padding: '0.5rem', backgroundColor: '#fee', borderRadius: '4px' }}>{error}</div>}
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.25rem' }}>Email:</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ddd' }}
-          />
-        </div>
+    <div style={{ 
+      minHeight: '100vh', 
+      backgroundColor: '#f0f2f5', 
+      padding: '40px 20px',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center'
+    }}>
+      <div style={{ 
+        maxWidth: '1100px', 
+        width: '100%', 
+        display: 'flex', 
+        flexWrap: 'wrap',
+        gap: '30px',
+        justifyContent: 'center'
+      }}>
         
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.25rem' }}>Password:</label>
-          <div style={{ position: 'relative' }}>
-            <input
-              type={showPassword ? 'text' : 'password'}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ddd' }}
-            />
-            <button
-              type="button"
-              onClick={toggleShowPassword}
-              style={{
-                position: 'absolute',
-                right: '8px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '16px'
-              }}
-            >
-              {showPassword ? '🙈' : '👁️'}
-            </button>
+        {/* Welcome Section - LEFT */}
+        <div style={{ 
+          flex: '1', 
+          minWidth: '280px',
+          backgroundColor: '#e67e22', 
+          borderRadius: '16px', 
+          padding: '40px 30px',
+          color: 'white',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '50px', marginBottom: '20px' }}>🌍</div>
+          <h2 style={{ marginBottom: '15px' }}>Chimango Tour</h2>
+          <p style={{ lineHeight: '1.6', marginBottom: '0' }}>
+            Discover the beauty of Malawi with our amazing tours and activities.
+          </p>
+          <p style={{ marginTop: '20px', fontSize: '14px', opacity: 0.9 }}>
+            Join us for an unforgettable adventure!
+          </p>
+        </div>
+
+        {/* Login & Register Section - RIGHT */}
+        <div style={{ 
+          flex: '1.5', 
+          minWidth: '400px',
+          backgroundColor: 'white', 
+          borderRadius: '16px', 
+          padding: '30px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+        }}>
+          
+          <div style={{ textAlign: 'center', marginBottom: '25px' }}>
+            <h2 style={{ color: '#2c3e50', marginBottom: '8px' }}>Welcome Back!</h2>
+            <p style={{ color: '#666' }}>
+              Don't have an account? <strong style={{ color: '#e67e22' }}>Register below</strong>
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '30px' }}>
+            
+            {/* LOGIN FORM */}
+            <div style={{ flex: 1, minWidth: '250px' }}>
+              <div style={{ 
+                backgroundColor: '#f8f9fa', 
+                padding: '20px', 
+                borderRadius: '12px',
+                height: '100%'
+              }}>
+                <h3 style={{ color: '#2c3e50', marginBottom: '20px', textAlign: 'center' }}>Login</h3>
+                
+                {loginError && (
+                  <div style={{ 
+                    color: 'red', 
+                    marginBottom: '15px', 
+                    padding: '8px', 
+                    backgroundColor: '#fee', 
+                    borderRadius: '6px',
+                    fontSize: '13px',
+                    textAlign: 'center'
+                  }}>
+                    {loginError}
+                  </div>
+                )}
+                
+                <form onSubmit={handleLogin}>
+                  <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '14px' }}>Email</label>
+                    <input
+                      type="email"
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                      required
+                      placeholder="your@email.com"
+                      style={{ 
+                        width: '100%', 
+                        padding: '10px', 
+                        borderRadius: '8px', 
+                        border: '1px solid #ddd',
+                        fontSize: '14px'
+                      }}
+                    />
+                  </div>
+                  
+                  <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '14px' }}>Password</label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
+                        required
+                        placeholder="••••••"
+                        style={{ 
+                          width: '100%', 
+                          padding: '10px', 
+                          borderRadius: '8px', 
+                          border: '1px solid #ddd',
+                          fontSize: '14px'
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={toggleShowPassword}
+                        style={{
+                          position: 'absolute',
+                          right: '10px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          fontSize: '16px'
+                        }}
+                      >
+                        {showPassword ? '🙈' : '👁️'}
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div style={{ marginBottom: '15px', textAlign: 'right' }}>
+                    <Link to="/forgot-password" style={{ color: '#e67e22', fontSize: '12px', textDecoration: 'none' }}>
+                      Forgot Password?
+                    </Link>
+                  </div>
+                  
+                  <button
+                    type="submit"
+                    disabled={loginLoading}
+                    style={{ 
+                      width: '100%', 
+                      padding: '11px', 
+                      backgroundColor: '#e67e22', 
+                      color: 'white', 
+                      border: 'none', 
+                      borderRadius: '8px', 
+                      cursor: 'pointer', 
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      opacity: loginLoading ? 0.7 : 1
+                    }}
+                  >
+                    {loginLoading ? 'Logging in...' : 'Login'}
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            {/* REGISTER FORM */}
+            <div style={{ flex: 1, minWidth: '250px' }}>
+              <div style={{ 
+                backgroundColor: '#f8f9fa', 
+                padding: '20px', 
+                borderRadius: '12px',
+                height: '100%'
+              }}>
+                <h3 style={{ color: '#2c3e50', marginBottom: '20px', textAlign: 'center' }}>Register</h3>
+                
+                {registerError && (
+                  <div style={{ 
+                    color: 'red', 
+                    marginBottom: '15px', 
+                    padding: '8px', 
+                    backgroundColor: '#fee', 
+                    borderRadius: '6px',
+                    fontSize: '13px',
+                    textAlign: 'center'
+                  }}>
+                    {registerError}
+                  </div>
+                )}
+                
+                <form onSubmit={handleRegister}>
+                  <div style={{ marginBottom: '12px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '14px' }}>Full Name</label>
+                    <input
+                      type="text"
+                      value={registerFullName}
+                      onChange={(e) => setRegisterFullName(e.target.value)}
+                      required
+                      placeholder="John Doe"
+                      style={{ 
+                        width: '100%', 
+                        padding: '10px', 
+                        borderRadius: '8px', 
+                        border: '1px solid #ddd',
+                        fontSize: '14px'
+                      }}
+                    />
+                  </div>
+                  
+                  <div style={{ marginBottom: '12px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '14px' }}>Email</label>
+                    <input
+                      type="email"
+                      value={registerEmail}
+                      onChange={(e) => setRegisterEmail(e.target.value)}
+                      required
+                      placeholder="your@email.com"
+                      style={{ 
+                        width: '100%', 
+                        padding: '10px', 
+                        borderRadius: '8px', 
+                        border: '1px solid #ddd',
+                        fontSize: '14px'
+                      }}
+                    />
+                  </div>
+                  
+                  <div style={{ marginBottom: '12px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '14px' }}>Phone (Optional)</label>
+                    <input
+                      type="tel"
+                      value={registerPhone}
+                      onChange={(e) => setRegisterPhone(e.target.value)}
+                      placeholder="0888888888"
+                      style={{ 
+                        width: '100%', 
+                        padding: '10px', 
+                        borderRadius: '8px', 
+                        border: '1px solid #ddd',
+                        fontSize: '14px'
+                      }}
+                    />
+                  </div>
+                  
+                  <div style={{ marginBottom: '12px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '14px' }}>Password</label>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={registerPassword}
+                      onChange={(e) => setRegisterPassword(e.target.value)}
+                      required
+                      placeholder="•••••• (min 6)"
+                      style={{ 
+                        width: '100%', 
+                        padding: '10px', 
+                        borderRadius: '8px', 
+                        border: '1px solid #ddd',
+                        fontSize: '14px'
+                      }}
+                    />
+                  </div>
+                  
+                  <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '14px' }}>Confirm Password</label>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={registerConfirmPassword}
+                      onChange={(e) => setRegisterConfirmPassword(e.target.value)}
+                      required
+                      placeholder="••••••"
+                      style={{ 
+                        width: '100%', 
+                        padding: '10px', 
+                        borderRadius: '8px', 
+                        border: '1px solid #ddd',
+                        fontSize: '14px'
+                      }}
+                    />
+                  </div>
+                  
+                  <button
+                    type="submit"
+                    disabled={registerLoading}
+                    style={{ 
+                      width: '100%', 
+                      padding: '11px', 
+                      backgroundColor: '#2ecc71', 
+                      color: 'white', 
+                      border: 'none', 
+                      borderRadius: '8px', 
+                      cursor: 'pointer', 
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      opacity: registerLoading ? 0.7 : 1
+                    }}
+                  >
+                    {registerLoading ? 'Creating Account...' : 'Create Account'}
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+          
+          <div style={{ 
+            textAlign: 'center', 
+            marginTop: '25px', 
+            paddingTop: '15px', 
+            borderTop: '1px solid #eee',
+            fontSize: '11px',
+            color: '#999'
+          }}>
+            <p>By continuing, you agree to our Terms of Service and Privacy Policy</p>
           </div>
         </div>
-        
-        <button
-          type="submit"
-          disabled={loading}
-          style={{ width: '100%', padding: '0.75rem', backgroundColor: '#3498db', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '1rem' }}
-        >
-          {loading ? 'Logging in...' : 'Login'}
-        </button>
-      </form>
-      
-      <p style={{ marginTop: '1rem', textAlign: 'center' }}>
-        <Link to="/forgot-password" style={{ color: '#e67e22', textDecoration: 'none' }}>
-          Forgot Password?
-        </Link>
-      </p>
-      
-      <p style={{ marginTop: '0.5rem', textAlign: 'center' }}>
-        Don't have an account? <Link to="/register">Register</Link>
-      </p>
+      </div>
     </div>
   );
 };

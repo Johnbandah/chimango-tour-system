@@ -70,27 +70,30 @@ const HomePage = () => {
     }
   };
 
+  // FIXED: This now redirects to the specific activity
   const handleCarouselClick = async (carouselImage) => {
-    console.log("Carousel clicked:", carouselImage.activityName);
+    console.log('Carousel clicked:', carouselImage.activityName);
     
     try {
+      // Fetch all activities from database
       const res = await axios.get(`${API_URL}/api/activities`);
       const allActivities = res.data;
       
-      // Case-insensitive matching
+      // Find the activity that matches the carousel image name (case-insensitive)
       const matchedActivity = allActivities.find(
         activity => activity.name.toLowerCase().trim() === carouselImage.activityName.toLowerCase().trim()
       );
       
       if (matchedActivity) {
-        console.log("Matched activity:", matchedActivity.name);
+        console.log('Found activity:', matchedActivity.name);
+        // Navigate directly to the activity detail on activities page
         navigate(`/activities?book=${matchedActivity._id}`);
       } else {
-        console.log("No match found, going to activities page");
+        console.log('No match found, going to activities page');
         navigate('/activities');
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error finding activity:', error);
       navigate('/activities');
     }
   };
