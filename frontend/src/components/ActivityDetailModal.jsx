@@ -492,6 +492,23 @@ const ActivityDetailModal = ({ activity, onClose, user }) => {
                       </div>
                     )}
                     
+                    {/* PRICE SUMMARY WITH MWK FOR MALAWIAN */}
+                    <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '8px', textAlign: 'center' }}>
+                      <span style={{ fontSize: '14px', color: '#666' }}>Total Price:</span>
+                      <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#e67e22' }}>
+                        USD {totalPrice.toLocaleString()}
+                      </div>
+                      {nationality === 'malawian' && (
+                        <div style={{ fontSize: '16px', color: '#2c3e50', marginTop: '5px' }}>
+                          ≈ MWK {(totalPrice * 1800).toLocaleString()}
+                        </div>
+                      )}
+                      {airportPickup && <small>+ USD 7.50 for airport pickup</small>}
+                      {nationality === 'international' && (
+                        <small style={{ display: 'block', marginTop: '5px' }}>※ 50% upfront payment required on arrival in USD</small>
+                      )}
+                    </div>
+                    
                     <div style={{ display: 'flex', gap: '10px' }}>
                       <button onClick={() => setActiveTab('personal')} style={{ flex: 1, padding: '14px', backgroundColor: '#95a5a6', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>← Back</button>
                       <button 
@@ -563,8 +580,7 @@ const ActivityDetailModal = ({ activity, onClose, user }) => {
 
       {/* Full Gallery Modal */}
       {showFullGallery && (
-        <ImageGalleryModal
-          activity={activity}
+        <ImageGalleryModal          activity={activity}
           onClose={() => setShowFullGallery(false)}
         />
       )}

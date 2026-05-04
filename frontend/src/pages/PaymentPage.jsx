@@ -24,6 +24,9 @@ const PaymentPage = () => {
     tnm: '0884183092'
   };
 
+  // Exchange rate: 1 USD = 1800 MWK
+  const exchangeRate = 1800;
+
   useEffect(() => {
     const storedData = sessionStorage.getItem('pendingPayment');
     
@@ -96,6 +99,7 @@ const PaymentPage = () => {
         paymentMethod: methodName,
         paymentReference: paymentReference,
         amount: bookingData.totalPrice,
+        amountMWK: Math.round(bookingData.totalPrice * exchangeRate),
         customerName: bookingData.personalDetails?.fullName,
         customerPhone: bookingData.personalDetails?.phone,
         customerEmail: bookingData.personalDetails?.email,
@@ -106,7 +110,7 @@ const PaymentPage = () => {
 
       await axios.post(`${API_URL}/api/payment-request`, paymentData);
       
-      alert(`✅ Payment request submitted successfully!\n\nBooking Code: ${bookingData.bookingCode}\nReference: ${paymentReference}\n\nYour booking is pending admin approval. You will receive confirmation once your payment is verified.`);
+      alert(`✅ Payment request submitted successfully!\n\nBooking Code: ${bookingData.bookingCode}\nReference: ${paymentReference}\nAmount: MWK ${Math.round(bookingData.totalPrice * exchangeRate).toLocaleString()}\n\nYour booking is pending admin approval.`);
       
       sessionStorage.removeItem('pendingPayment');
       
@@ -122,18 +126,13 @@ const PaymentPage = () => {
     }
   };
 
-  // PayChangu Payment Handler
+  // PayChangu Payment Handler - MWK only
   const handlePayChanguPayment = () => {
-    // Convert USD to MWK (1 USD = 1800 MWK)
-    const amountMWK = Math.round(bookingData.totalPrice * 1800);
-    
-    // Your PayChangu payment link
+    const amountMWK = Math.round(bookingData.totalPrice * exchangeRate);
     const paymentLink = "https://pay.paychangu.com/SC-CWC5T0";
+    const paymentUrl = `${paymentLink}?amount=${amountMWK}&currency=MWK&description=Chimango%20Tour%20Booking%20${bookingData.bookingCode}`;
     
-    // Create the full URL with amount parameter
-    const paymentUrl = `${paymentLink}?amount=${amountMWK}&description=Chimango%20Tour%20Booking%20${bookingData.bookingCode}`;
-    
-    // Open PayChangu payment page
+    console.log(`Redirecting to PayChangu with amount: MWK ${amountMWK.toLocaleString()}`);
     window.location.href = paymentUrl;
   };
 
@@ -172,6 +171,8 @@ const PaymentPage = () => {
     );
   }
 
+  const amountMWK = Math.round(bookingData.totalPrice * exchangeRate);
+
   return (
     <div style={{ 
       minHeight: '100vh', 
@@ -199,13 +200,14 @@ const PaymentPage = () => {
           textAlign: 'center'
         }}>
           <p style={{ margin: 0 }}><strong>Booking Code:</strong> {bookingData.bookingCode}</p>
-          <p style={{ margin: '5px 0 0' }}><strong>Total Amount:</strong> <span style={{ color: '#e67e22', fontSize: '24px', fontWeight: 'bold' }}>USD {bookingData.totalPrice}</span></p>
+          <p style={{ margin: '5px 0 0' }}><strong>Amount (USD):</strong> <span style={{ color: '#e67e22', fontSize: '24px', fontWeight: 'bold' }}>USD {bookingData.totalPrice}</span></p>
+          <p style={{ margin: '5px 0 0' }}><strong>Amount (MWK):</strong> <span style={{ color: '#2c3e50', fontSize: '18px', fontWeight: 'bold' }}>MWK {amountMWK.toLocaleString()}</span></p>
           <p style={{ margin: '5px 0 0', fontSize: '12px', color: '#666' }}>Activity: {bookingData.activityName}</p>
         </div>
 
         <h3 style={{ fontSize: '16px', marginBottom: '15px' }}>Select Payment Method:</h3>
 
-        {/* PayChangu Option */}
+        {/* PayChangu Option - MWK only */}
         <div 
           onClick={() => setPaymentMethod('paychangu')}
           style={{
@@ -219,7 +221,7 @@ const PaymentPage = () => {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <input type="radio" checked={paymentMethod === 'paychangu'} readOnly />
-            <span style={{ fontWeight: 'bold' }}>💳 PayChangu (Card/Mobile Money)</span>
+            <span style={{ fontWeight: 'bold' }}>💳 PayChangu (Card/Mobile Money) - MWK only</span>
           </div>
           {paymentMethod === 'paychangu' && (
             <div style={{ marginTop: '15px' }}>
@@ -237,13 +239,13 @@ const PaymentPage = () => {
                   fontWeight: 'bold'
                 }}
               >
-                Pay with PayChangu
+                Pay MWK {amountMWK.toLocaleString()} with PayChangu
               </button>
             </div>
           )}
         </div>
 
-        {/* Airtel Money */}
+        {/* Airtel Money - MWK only */}
         <div 
           onClick={() => setPaymentMethod('airtel')}
           style={{
@@ -263,12 +265,12 @@ const PaymentPage = () => {
             <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
               <p><strong>Send payment to:</strong> <span style={{ color: '#e67e22', fontSize: '18px' }}>{mobileMoneyNumbers.airtel}</span></p>
               <p><strong>Reference:</strong> {bookingData.bookingCode}</p>
-              <p><strong>Amount:</strong> USD {bookingData.totalPrice}</p>
+              <p><strong>Amount:</strong> MWK {amountMWK.toLocaleString()}</p>
             </div>
           )}
         </div>
 
-        {/* TNM Mpamba */}
+        {/* TNM Mpamba - MWK only */}
         <div 
           onClick={() => setPaymentMethod('tnm')}
           style={{
@@ -288,12 +290,12 @@ const PaymentPage = () => {
             <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
               <p><strong>Send payment to:</strong> <span style={{ color: '#e67e22', fontSize: '18px' }}>{mobileMoneyNumbers.tnm}</span></p>
               <p><strong>Reference:</strong> {bookingData.bookingCode}</p>
-              <p><strong>Amount:</strong> USD {bookingData.totalPrice}</p>
+              <p><strong>Amount:</strong> MWK {amountMWK.toLocaleString()}</p>
             </div>
           )}
         </div>
 
-        {/* National Bank */}
+        {/* National Bank - MWK only */}
         <div 
           onClick={() => setPaymentMethod('bank')}
           style={{
@@ -316,7 +318,7 @@ const PaymentPage = () => {
               <p><strong>Account Number:</strong> <span style={{ color: '#e67e22' }}>{bankDetails.accountNumber}</span></p>
               <p><strong>Branch:</strong> {bankDetails.branch}</p>
               <p><strong>Reference:</strong> {bookingData.bookingCode}</p>
-              <p><strong>Amount:</strong> USD {bookingData.totalPrice}</p>
+              <p><strong>Amount:</strong> MWK {amountMWK.toLocaleString()}</p>
             </div>
           )}
         </div>
@@ -340,9 +342,9 @@ const PaymentPage = () => {
         <div style={{ backgroundColor: '#d4edda', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
           <h4 style={{ margin: '0 0 8px 0', color: '#155724' }}>Instructions:</h4>
           <ol style={{ margin: '0', paddingLeft: '20px', color: '#155724', fontSize: '13px' }}>
-            <li>Make payment using your selected method above</li>
-            <li>For PayChangu, you will be redirected to complete payment</li>
-            <li>For other methods, enter the transaction reference number</li>
+            <li>Make payment of <strong>MWK {amountMWK.toLocaleString()}</strong> using your selected method</li>
+            <li>For PayChangu, you will be redirected to complete payment in MWK</li>
+            <li>For other methods, enter the transaction reference number after payment</li>
             <li>Click "Submit Payment" (or "Pay with PayChangu")</li>
             <li>Your booking will be confirmed after payment verification</li>
           </ol>
